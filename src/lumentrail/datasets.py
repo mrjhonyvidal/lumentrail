@@ -109,18 +109,21 @@ def healthsearchqa_records(workbook: Path, limit: int | None = None) -> list[dic
         from openpyxl import load_workbook
     except ImportError as error:
         raise RuntimeError("Install workbook support: pip install -e '.[healthsearchqa]'") from error
-    sheet = load_workbook(workbook, read_only=True, data_only=True).active
     records: list[dict] = []
     seen: set[str] = set()
-    for row in sheet.iter_rows(values_only=True):
-        for cell in row:
-            if not isinstance(cell, str):
-                continue
-            question = " ".join(cell.split())
-            if not question.endswith("?") or question.lower() in seen:
-                continue
-            seen.add(question.lower())
-            records.append({"question": question, "relevant_ids": [], "needs_review": True})
-            if limit and len(records) >= limit:
-                return records
+    source = load_workbook(workbook, read_only=True, data_only=True)
+    try:
+        for row in source.active.iter_rows(values_only=True):
+            for cell in row:
+                if not isinstance(cell, str):
+                    continue
+                question = " ".join(cell.split())
+                if not question.endswith("?") or question.lower() in seen:
+                    continue
+                seen.add(question.lower())
+                records.append({"question": question, "relevant_ids": [], "needs_review": True})
+                if limit and len(records) >= limit:
+                    return records
+    finally:
+        source.close()
     return records

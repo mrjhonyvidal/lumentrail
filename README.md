@@ -7,7 +7,8 @@ The default index is five **synthetic** passages. It runs offline with Python al
 ## Start in two minutes
 
 ```bash
-cd projects/lumentrail
+git clone https://github.com/mrjhonyvidal/lumentrail.git
+cd lumentrail
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -e .
@@ -16,6 +17,8 @@ lumentrail search "What is AF?" --method hybrid
 lumentrail eval --method hybrid
 python -m unittest discover -s tests -v
 ```
+
+To measure test coverage, install the test extra and run `coverage run -m unittest discover -s tests` followed by `coverage report -m`. Coverage describes exercised code paths; it is not a measure of retrieval or clinical quality.
 
 Or run without installing: `PYTHONPATH=src python3 -m lumentrail init`.
 

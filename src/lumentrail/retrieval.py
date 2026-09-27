@@ -1,4 +1,4 @@
-"""Access filtering, retrieval, fusion and optional reranking."""
+"""Retrieval, rank fusion and optional reranking for a public-data lab."""
 
 from __future__ import annotations
 

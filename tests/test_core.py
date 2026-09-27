@@ -1,14 +1,21 @@
+import contextlib
+import io
+import json
+import os
 import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from unittest import mock
 
+from lumentrail import cli
+from lumentrail.api import serve
 from lumentrail.datasets import DEMO_JUDGEMENTS, DEMO_PASSAGES, csv_passages, medquad_records
 from lumentrail.embedding import HashEmbedder
 from lumentrail.evaluation import evaluate
 from lumentrail.memory import add_note, delete_notes, list_notes
 from lumentrail.retrieval import search
-from lumentrail.storage import connect, replace_passages
+from lumentrail.storage import all_passages, connect, keyword_search, replace_passages
 
 
 class RetrievalTest(unittest.TestCase):
@@ -53,6 +60,60 @@ class RetrievalTest(unittest.TestCase):
         self.embedder.name = "changed"
         with self.assertRaises(ValueError):
             search(self.connection, "asthma", self.embedder)
+
+    def test_eval_reports_known_ranks_and_rejects_unlabelled_questions(self):
+        report = evaluate(self.connection, [
+            {"question": "What is AF?", "relevant_ids": ["demo-af"]},
+            {"question": "What is an absent topic?", "relevant_ids": ["missing"]},
+        ], self.embedder, method="keyword", limit=1)
+        self.assertEqual(report["questions"], 2)
+        self.assertEqual(report["recall_at_k"], 0.5)
+        self.assertEqual(report["precision_at_k"], 0.5)
+        self.assertEqual(report["mean_reciprocal_rank"], 0.5)
+        with self.assertRaisesRegex(ValueError, "No reviewed relevance labels"):
+            evaluate(self.connection, [{"question": "Unknown?", "relevant_ids": []}],
+                     self.embedder, method="hybrid", limit=3)
+
+    def test_reingest_removes_retired_passages_from_both_indexes(self):
+        replacement = [{"id": "new", "question": "What is a new topic?",
+                        "answer": "A new passage.", "source": "synthetic-demo"}]
+        vectors = self.embedder.encode(["What is a new topic? A new passage."])
+        replace_passages(self.connection, replacement, vectors, self.embedder.name)
+        self.assertEqual([passage["id"] for passage in all_passages(self.connection)], ["new"])
+        self.assertEqual(keyword_search(self.connection, "asthma", 3), [])
+
+    def test_search_rejects_invalid_inputs(self):
+        with self.assertRaises(ValueError):
+            search(self.connection, "", self.embedder)
+        with self.assertRaises(ValueError):
+            search(self.connection, "AF", self.embedder, limit=21)
+        with self.assertRaises(ValueError):
+            search(self.connection, "AF", self.embedder, method="unknown")
+
+    def test_cli_initialises_searches_and_evaluates_a_local_index(self):
+        previous_directory = Path.cwd()
+        database = Path(self.folder.name) / "cli.db"
+        try:
+            os.chdir(self.folder.name)
+            with contextlib.redirect_stdout(io.StringIO()) as output:
+                cli.execute(cli.parser().parse_args(["--database", str(database), "init"]))
+                cli.execute(cli.parser().parse_args(["--database", str(database),
+                                                     "search", "What is AF?", "--method", "hybrid"]))
+            self.assertIn('"id": "demo-af"', output.getvalue())
+            with contextlib.redirect_stdout(io.StringIO()) as output:
+                cli.execute(cli.parser().parse_args(["--database", str(database),
+                                                     "eval", "--method", "hybrid"]))
+            self.assertEqual(json.loads(output.getvalue())["questions"], 3)
+        finally:
+            os.chdir(previous_directory)
+
+    def test_api_refuses_weak_token_and_external_bind_without_proxy(self):
+        with mock.patch.dict(os.environ, {"LUMENTRAIL_API_TOKEN": "short"}):
+            with self.assertRaisesRegex(ValueError, "at least 32"):
+                serve(Path(self.folder.name) / "index.db", "127.0.0.1", 8080, "hash")
+        with mock.patch.dict(os.environ, {"LUMENTRAIL_API_TOKEN": "a" * 40}, clear=True):
+            with self.assertRaisesRegex(ValueError, "TLS reverse proxy"):
+                serve(Path(self.folder.name) / "index.db", "0.0.0.0", 8080, "hash")
 
     def test_medquad_import_skips_missing_answers_and_preserves_source(self):
         archive = Path(self.folder.name) / "fixture.zip"
