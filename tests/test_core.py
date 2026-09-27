@@ -10,6 +10,7 @@ from unittest import mock
 
 from lumentrail import cli
 from lumentrail.api import serve
+from lumentrail.chunking import fixed_character_chunks, paragraph_chunks
 from lumentrail.datasets import DEMO_JUDGEMENTS, DEMO_PASSAGES, csv_passages, medquad_records
 from lumentrail.embedding import HashEmbedder
 from lumentrail.evaluation import evaluate
@@ -89,6 +90,16 @@ class RetrievalTest(unittest.TestCase):
             search(self.connection, "AF", self.embedder, limit=21)
         with self.assertRaises(ValueError):
             search(self.connection, "AF", self.embedder, method="unknown")
+
+    def test_chunking_preserves_reviewed_paragraphs(self):
+        source = "A short heading.\n\nKeep the caution beside the fact.\n\nAnother topic."
+        self.assertEqual("".join(fixed_character_chunks(source, 12)), source)
+        self.assertEqual(paragraph_chunks(source, 35),
+                         ["A short heading.", "Keep the caution beside the fact.", "Another topic."])
+        with self.assertRaisesRegex(ValueError, "review its boundary"):
+            paragraph_chunks(source, 12)
+        with self.assertRaises(ValueError):
+            fixed_character_chunks(source, 0)
 
     def test_cli_initialises_searches_and_evaluates_a_local_index(self):
         previous_directory = Path.cwd()

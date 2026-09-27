@@ -24,6 +24,17 @@ Or run without installing: `PYTHONPATH=src python3 -m lumentrail init`.
 
 The CLI prints a short brand line and JSON results. Its main commands are `init`, `fetch`, `import-csv`, `ingest`, `search`, `eval`, `memory`, `serve`, `sandbox`, `infra` and `repo`. Run `lumentrail --help` for arguments. The [notebook](notebooks/01_retrieval_lab.ipynb) walks through search and evaluation.
 
+## Follow the learning path
+
+| Stage | Run in this repository | What to compare next |
+| --- | --- | --- |
+| 01 Retrieval baseline | [Retrieval notebook](notebooks/01_retrieval_lab.ipynb) and `lumentrail search` compare BM25, exact dense search and hybrid fusion. | Try BGE and the optional reranker on the same held-out questions. |
+| 02 Inspect ingestion | [Chunking notebook](notebooks/02_chunking_lab.ipynb) compares fixed width with paragraph boundaries on synthetic text. | Review passages and source links before embedding. Try semantic boundaries only if labelled questions show a benefit. |
+| 03 Memory | `lumentrail memory add`, `list` and `delete` keep dated synthetic notes scoped to one person. | Test changed facts, expiry and deletion across sessions before considering an extracted fact graph. |
+| 04 Evaluation | `lumentrail eval` reports labelled Recall@k, Precision@k and mean reciprocal rank. | Add human-reviewed answer claims, citation checks and latency before evaluating a generator. |
+
+The notebooks and CLI share the same small Python package. Numbered folders with copies of the retrieval code would make fixes harder to follow. This lab deliberately stops before answer generation. [Graphiti](https://help.getzep.com/graphiti/getting-started/overview) is a temporal graph framework for evolving facts; [pgvector](https://github.com/pgvector/pgvector) adds vector search to PostgreSQL. They solve different problems and are possible extensions, not interchangeable memory stores. If you add an LLM, require an explicit choice before including a person's notes in its context and evaluate the answer separately from retrieval.
+
 ## Use public data
 
 ```bash

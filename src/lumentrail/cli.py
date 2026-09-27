@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import sys
+from contextlib import closing
 from datetime import date
 from pathlib import Path
 
@@ -104,7 +105,7 @@ def execute(arguments: argparse.Namespace) -> None:
     if arguments.action == "init":
         write_jsonl(Path("data/demo_passages.jsonl"), DEMO_PASSAGES)
         write_jsonl(Path("data/demo_judgements.jsonl"), DEMO_JUDGEMENTS)
-        with connect(arguments.database) as connection:
+        with closing(connect(arguments.database)) as connection:
             embedder = make_embedder("hash")
             texts = [f'{item["question"]} {item["answer"]}' for item in DEMO_PASSAGES]
             replace_passages(connection, DEMO_PASSAGES, embedder.encode(texts), embedder.name)
@@ -147,13 +148,13 @@ def execute(arguments: argparse.Namespace) -> None:
         embedder = make_embedder(arguments.embedding)
         texts = [f'{record["question"]} {record["answer"]}' for record in records]
         embeddings = embedder.encode(texts)
-        with connect(arguments.database) as connection:
+        with closing(connect(arguments.database)) as connection:
             replace_passages(connection, records, embeddings, embedder.name)
         print(f"Indexed {len(records)} passages with {embedder.name}")
         return
     if arguments.action in {"search", "eval"}:
         embedder = make_embedder(arguments.embedding)
-        with connect(arguments.database) as connection:
+        with closing(connect(arguments.database)) as connection:
             if arguments.action == "search":
                 result = search(connection, arguments.question, embedder, method=arguments.method,
                                 limit=arguments.limit, rerank=arguments.rerank,
@@ -164,7 +165,7 @@ def execute(arguments: argparse.Namespace) -> None:
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return
     if arguments.action == "memory":
-        with connect(arguments.database) as connection:
+        with closing(connect(arguments.database)) as connection:
             if arguments.operation == "add":
                 if not arguments.note:
                     raise ValueError("Provide a note")
