@@ -1,0 +1,6 @@
+resource_group_name          = "rg-lumentrail"
+container_app_environment_id = "/subscriptions/your-subscription/resourceGroups/rg-lumentrail/providers/Microsoft.App/managedEnvironments/internal-demo"
+user_assigned_identity_id    = "/subscriptions/your-subscription/resourceGroups/rg-lumentrail/providers/Microsoft.ManagedIdentity/userAssignedIdentities/lumentrail"
+key_vault_secret_id          = "https://your-vault.vault.azure.net/secrets/lumentrail-api-token"
+image                        = "yourregistry.azurecr.io/lumentrail:0.1.0"
+registry_server              = "yourregistry.azurecr.io"

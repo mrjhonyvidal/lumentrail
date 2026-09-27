@@ -1,0 +1,5 @@
+project_id          = "your-gcp-project"
+region              = "europe-west2"
+image               = "europe-west2-docker.pkg.dev/your-gcp-project/demo/lumentrail:0.1.0"
+api_token_secret_id = "projects/your-gcp-project/secrets/lumentrail-api-token"
+

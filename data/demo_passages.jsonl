@@ -1,0 +1,5 @@
+{"id": "demo-asthma", "question": "What is asthma?", "answer": "Asthma is a long-term condition that can make breathing difficult.", "source": "synthetic-demo", "entities": ["asthma"]}
+{"id": "demo-allergy", "question": "What is an allergy?", "answer": "An allergy is an immune reaction to a substance that is usually harmless to others.", "source": "synthetic-demo", "entities": ["allergy"]}
+{"id": "demo-af", "question": "What is atrial fibrillation?", "answer": "Atrial fibrillation, often shortened to AF, is an irregular heart rhythm.", "source": "synthetic-demo", "entities": ["atrial fibrillation", "AF"]}
+{"id": "demo-eczema", "question": "What is eczema?", "answer": "Eczema is a group of conditions that can cause itchy, inflamed skin.", "source": "synthetic-demo", "entities": ["eczema"]}
+{"id": "demo-citation", "question": "How should a health answer use sources?", "answer": "Check that each claim is supported by the cited passage and show when the source was updated.", "source": "synthetic-demo", "entities": ["citation"]}

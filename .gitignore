@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.terraform/
+*.tfstate*
+*.tfplan
+*.tfvars
+data/*.db
+data/downloads/
+data/healthsearchqa*.jsonl
+data/medquad*.jsonl
+data/imported*.jsonl
+.env

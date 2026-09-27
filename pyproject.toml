@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lumentrail"
+version = "0.1.0"
+description = "A small, inspectable retrieval and evaluation lab"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{name = "Jhony Vidal"}]
+dependencies = []
+
+[project.optional-dependencies]
+models = ["sentence-transformers>=3.0,<6"]
+healthsearchqa = ["openpyxl>=3.1,<4"]
+
+[project.scripts]
+lumentrail = "lumentrail.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

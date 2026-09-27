@@ -1,0 +1,4 @@
+host  = "raspberrypi.local"
+user  = "pi"
+image = "ghcr.io/your-account/lumentrail:0.1.0"
+

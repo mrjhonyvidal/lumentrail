@@ -1,0 +1,8 @@
+.git
+.venv
+data
+infra
+notebooks
+tests
+*.md
+

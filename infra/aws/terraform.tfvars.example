@@ -1,0 +1,7 @@
+region                   = "eu-west-2"
+image                    = "123456789012.dkr.ecr.eu-west-2.amazonaws.com/lumentrail:0.1.0"
+vpc_id                   = "vpc-example"
+private_subnet_ids       = ["subnet-private-one", "subnet-private-two"]
+client_security_group_id = "sg-approved-client"
+api_token_secret_arn     = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:lumentrail-api-token"
+
