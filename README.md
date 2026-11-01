@@ -1,6 +1,12 @@
 # LumenTrail
 
-Search a small collection of passages and check whether the right evidence comes back. Start with five made-up passages, then try your own documents. The project helps you understand search before adding an AI answer writer.
+**LumenTrail is a small Python project for building and testing document search for AI assistants.** Give it a question and a collection of text passages, such as paragraphs from a document. It returns matching passages with their sources. You can then check whether it found the information you expected.
+
+For example, a support assistant needs to find the correct return policy before drafting a customer reply. LumenTrail lets you test that search step and compare different ways of finding the policy. Its output is source text and search results; you can add AI answer generation later.
+
+## Run the demo
+
+This example uses five fictional health-related passages and three saved test questions. You run it in your terminal, with no web interface or AI account needed.
 
 ```bash
 git clone https://github.com/mrjhonyvidal/lumentrail.git
@@ -9,14 +15,22 @@ python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install -e .
 lumentrail init
-lumentrail search "What is AF?" --method keyword
+lumentrail search "What is asthma?" --method keyword --limit 1
 lumentrail eval --method keyword --limit 2
 python -m unittest discover -s tests -v
 ```
 
 **You need:** Python 3.11 or newer. Allow about five minutes on a laptop. Internet is needed for installation; the example itself runs offline. **Account: none. Estimated service cost: £0.** This excludes your laptop and electricity.
 
-You should see passages with source IDs, then an evaluation report with `recall_at_k`, `precision_at_k` and `mean_reciprocal_rank`. The tests should pass. A high score on five made-up passages only checks that the example works.
+The search should return one passage with ID `demo-asthma`, its original text and source `synthetic-demo`. This is a saved example being found, not a newly generated answer.
+
+The evaluation checks three questions against their expected passage IDs. Look at `cases` to see the expected and returned IDs for each question. All three expected passages should appear within the first two results. The tests should pass. These small examples check that the project works; they do not establish how well it will search your documents.
+
+## What you can use it for
+
+- **Compare search methods:** search by keywords, try an optional model that compares text by meaning, or combine both methods.
+- **Check whether a change helps:** keep the same questions and expected sources, change the search method, then inspect what improved or went missing.
+- **Build on the search code:** load your own text records and reuse the Python functions or local HTTP API in another application. You prepare the text first; the project does not import PDF or Word files directly.
 
 ## If setup gets stuck
 

@@ -1,6 +1,8 @@
 # LumenTrail: further experiments
 
-**Follow the evidence.** A small, open source lab for retrieval, context, graph links, memory and evaluation. It returns passages with source IDs. It does not generate medical answers.
+LumenTrail is a small Python project for building and testing document search for AI assistants. You supply text passages and a question; it returns matching passages and their sources. Saved test questions let you check whether the search found the information you expected.
+
+Start with the [README demo](../README.md#run-the-demo). The experiments below extend that search with other methods, text splitting, dated notes and a local API. Answer generation is a separate step you can add later.
 
 The default index is five **synthetic** passages. It runs offline with Python alone. The hash vector is a deterministic plumbing baseline, **not a semantic embedding**. Switch to BGE for real dense retrieval, and measure it against keyword and hybrid search before choosing a production stack.
 
@@ -13,7 +15,7 @@ python3 -m venv .venv
 . .venv/bin/activate
 pip install -e .
 lumentrail init
-lumentrail search "What is AF?" --method hybrid
+lumentrail search "What is asthma?" --method hybrid
 lumentrail eval --method hybrid
 python -m unittest discover -s tests -v
 ```
