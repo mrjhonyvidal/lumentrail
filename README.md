@@ -1,147 +1,52 @@
-# ✦ LumenTrail
+# LumenTrail
 
-**Follow the evidence.** A small, open source lab for retrieval, context, graph links, memory and evaluation. It returns passages with source IDs. It does not generate medical answers.
-
-The default index is five **synthetic** passages. It runs offline with Python alone. The hash vector is a deterministic plumbing baseline, **not a semantic embedding**. Switch to BGE for real dense retrieval, and measure it against keyword and hybrid search before choosing a production stack.
-
-## Start in two minutes
+Search a small collection of passages and check whether the right evidence comes back. Start with five made-up passages, then try your own documents. The project helps you understand search before adding an AI answer writer.
 
 ```bash
 git clone https://github.com/mrjhonyvidal/lumentrail.git
 cd lumentrail
 python3 -m venv .venv
 . .venv/bin/activate
-pip install -e .
+python -m pip install -e .
 lumentrail init
-lumentrail search "What is AF?" --method hybrid
-lumentrail eval --method hybrid
+lumentrail search "What is AF?" --method keyword
+lumentrail eval --method keyword --limit 2
 python -m unittest discover -s tests -v
 ```
 
-To measure test coverage, install the test extra and run `coverage run -m unittest discover -s tests` followed by `coverage report -m`. Coverage describes exercised code paths; it is not a measure of retrieval or clinical quality.
+**You need:** Python 3.11 or newer. Allow about five minutes on a laptop. Internet is needed for installation; the example itself runs offline. **Account: none. Estimated service cost: £0.** This excludes your laptop and electricity.
 
-Or run without installing: `PYTHONPATH=src python3 -m lumentrail init`.
+You should see passages with source IDs, then an evaluation report with `recall_at_k`, `precision_at_k` and `mean_reciprocal_rank`. The tests should pass. A high score on five made-up passages only checks that the example works.
 
-The CLI prints a short brand line and JSON results. Its main commands are `init`, `fetch`, `import-csv`, `ingest`, `search`, `eval`, `memory`, `serve`, `sandbox`, `infra` and `repo`. Run `lumentrail --help` for arguments. The [notebook](notebooks/01_retrieval_lab.ipynb) walks through search and evaluation.
+## If setup gets stuck
 
-## Follow the learning path
+- Check `python3 --version`. On Windows, use `py -3` to create the environment and `.venv\Scripts\Activate.ps1` in PowerShell to activate it.
+- Without installing the package, run `PYTHONPATH=src python3 -m lumentrail init` on macOS or Linux. Replace `init` with the other commands above as needed.
+- Run commands from the project folder. `init` writes the demo index into `data/`; use it to reset the learning example.
 
-| Stage | Run in this repository | What to compare next |
-| --- | --- | --- |
-| 01 Retrieval baseline | [Retrieval notebook](notebooks/01_retrieval_lab.ipynb) and `lumentrail search` compare BM25, exact dense search and hybrid fusion. | Try BGE and the optional reranker on the same held-out questions. |
-| 02 Inspect ingestion | [Chunking notebook](notebooks/02_chunking_lab.ipynb) compares fixed width with paragraph boundaries on synthetic text. | Review passages and source links before embedding. Try semantic boundaries only if labelled questions show a benefit. |
-| 03 Memory | `lumentrail memory add`, `list` and `delete` keep dated synthetic notes scoped to one person. | Test changed facts, expiry and deletion across sessions before considering an extracted fact graph. |
-| 04 Evaluation | `lumentrail eval` reports labelled Recall@k, Precision@k and mean reciprocal rank. | Add human-reviewed answer claims, citation checks and latency before evaluating a generator. |
+## Try one change
 
-The notebooks and CLI share the same small Python package. Numbered folders with copies of the retrieval code would make fixes harder to follow. This lab deliberately stops before answer generation. [Graphiti](https://help.getzep.com/graphiti/getting-started/overview) is a temporal graph framework for evolving facts; [pgvector](https://github.com/pgvector/pgvector) adds vector search to PostgreSQL. They solve different problems and are possible extensions, not interchangeable memory stores. If you add an LLM, require an explicit choice before including a person's notes in its context and evaluate the answer separately from retrieval.
+Run the same question with `--method dense`, then `--method hybrid`. Dense search compares numeric representations of text; hybrid search combines keyword and dense results. The default numeric representation hashes words. It is a plumbing example and does not understand meaning.
 
-## Use public data
+Next, edit a copy of `data/demo_judgements.jsonl` and inspect which passage IDs your questions should find. Keep those judgements fixed while comparing search methods. The [retrieval notebook](notebooks/01_retrieval_lab.ipynb) walks through the same experiment.
 
-```bash
-lumentrail fetch medquad --limit 200
-lumentrail ingest data/medquad_passages.jsonl --embedding hash
-lumentrail search "What is atrial fibrillation?"
+## Choose a next step
 
-pip install -e '.[models]'
-lumentrail ingest data/medquad_passages.jsonl --embedding bge
-lumentrail search "What is an irregular heartbeat?" --embedding bge --rerank
-```
+| I want to... | Start here |
+| --- | --- |
+| Use my own passages or a public dataset | [Data import](docs/guide.md#use-public-data) |
+| Try a real text embedding model | [Optional BGE model](docs/guide.md#use-public-data) |
+| Understand the search methods | [Implementation map](docs/guide.md#what-the-code-demonstrates) |
+| Try dated notes or chunking | [Learning path](docs/guide.md#follow-the-learning-path) |
+| Call search over HTTP | [Local API](docs/guide.md#local-read-only-api) |
+| Explore Docker, cloud or a Raspberry Pi | [Deployment examples](docs/guide.md#cloud-and-raspberry-pi-examples) |
 
-`fetch medquad` downloads the [original MedQuAD GitHub archive](https://github.com/abachaa/MedQuAD), keeps source links and skips missing answers. The original collection is CC BY 4.0 and credits Asma Ben Abacha and Dina Demner-Fushman. Three MedlinePlus subsets intentionally omit answers due to copyright. Downloaded data is ignored by Git. Check source date, clinical suitability and licence before using it beyond this lab. The Kaggle MedQuAD mirror and Hugging Face derivatives are alternatives; inspect their provenance and licence before substituting them.
+The optional local model has no API charge, but downloads model files and uses more memory and compute. Cloud resources are separate, billable experiments. Nothing in the quick start creates them.
 
-If you obtain a QA CSV from [Kaggle's MedQuAD mirror](https://www.kaggle.com/datasets/pythonafroz/medquad-medical-question-answer-for-ai-research) or a [Hugging Face dataset](https://huggingface.co/datasets), adapt its actual column names explicitly:
+## What to read in the code
 
-```bash
-lumentrail import-csv data/downloads/your-file.csv \
-  --question-column question --answer-column answer \
-  --source https://www.kaggle.com/datasets/pythonafroz/medquad-medical-question-answer-for-ai-research
-lumentrail ingest data/imported_passages.jsonl --embedding hash
-```
+`src/lumentrail/retrieval.py` finds passages, `evaluation.py` compares them with reviewed IDs, and `chunking.py` splits text. `tests/test_core.py` shows the expected behaviour. Keep the public index separate from the optional personal-note store.
 
-The CSV stays local. LumenTrail does not assume every mirror has the same fields, licence or answers. Its optional BGE model is downloaded from Hugging Face when you choose `--embedding bge`.
+Health-related passages in the demo are synthetic. This lab returns evidence, not medical answers. Use public or made-up data while learning; the project has no tenant access controls for private records.
 
-```bash
-pip install -e '.[healthsearchqa]'
-lumentrail fetch healthsearchqa --limit 50
-```
-
-This downloads the [HealthSearchQA supplementary workbook](https://www.nature.com/articles/s41586-023-06291-2) and writes **unlabelled questions**. It does not invent correct passages. Review each question against your current corpus, fill `relevant_ids`, then run `lumentrail eval data/your_reviewed_questions.jsonl`. Question only datasets cannot establish retrieval recall or clinical correctness on their own.
-
-## What the code demonstrates
-
-| Piece | Implementation | Lesson |
-| --- | --- | --- |
-| Keyword | SQLite FTS5 with BM25 | Acronyms and exact terms matter. |
-| Dense | Exact cosine scan | Start with a measurable baseline. This is not an ANN engine. |
-| Hybrid | Reciprocal rank fusion | Combine ranks without mixing incompatible raw scores. |
-| Reranking | Optional MS MARCO cross encoder | Reorder a small candidate set; measure the cost. |
-| Graph links | Explicit `entities` plus `--expand-entities` | Traversal is useful when relations matter. This is a small graph exercise, not automated GraphRAG. |
-| Memory | User scoped, dated, expiring notes | Keep a journal separate from the public knowledge index. |
-| Evals | Recall@k, precision@k and MRR | Freeze labels and compare changes on the same questions. |
-
-The [BGE small English model](https://huggingface.co/BAAI/bge-small-en-v1.5) is a practical lightweight starting point, not a universal winner. The optional [MS MARCO MiniLM L6 cross encoder](https://www.sbert.net/docs/pretrained-models/ce-msmarco.html) was trained for general passages, not clinical adjudication. Test medical acronyms, dosage details, negation, language and source freshness on your own reviewed data. Changing the embedding model requires re-ingesting the index; the code rejects mixed model versions.
-
-## A simple evaluation loop
-
-1. Save questions and reviewed relevant passage IDs in JSONL. Include exact terms, paraphrases, stale passages, no-answer cases and permission boundaries.
-2. Run `lumentrail eval --method keyword`, then `dense`, then `hybrid`, with the same `--limit` and corpus.
-3. Inspect every miss in `cases`. Check chunking and labels before tuning models.
-4. If you add generation, review each claim against its cited passage. Record unsupported claims, citation precision, abstentions, latency and cost separately. Do not treat retrieval recall as an answer-safety score.
-
-No user or tenant access-control schema exists in this small public-data lab. Do **not** put private patient records into its knowledge index. The memory command is for synthetic notes only and stores local plaintext SQLite. It supports date-aware lookup and deletion, but is not a healthcare record system. Logs omit HTTP questions.
-
-## Local read-only API
-
-```bash
-export LUMENTRAIL_API_TOKEN="$(python3 -c 'import secrets; print(secrets.token_urlsafe(36))')"
-lumentrail serve
-curl -H "Authorization: Bearer $LUMENTRAIL_API_TOKEN" \
-  'http://127.0.0.1:8080/search?question=What%20is%20AF%3F'
-```
-
-Only `/search` is exposed. It requires a token, reads the database in SQLite read-only mode, caps query length and does not log questions. Bind outside localhost only behind a TLS proxy. Rotate the token and use cloud secret stores. This lab does not include a patient-facing answer generator.
-
-`lumentrail sandbox` builds a container with the synthetic index and binds it to `127.0.0.1:8080`. It needs Docker and the token above. The image runs as a non-root user with a read-only filesystem at runtime. Build your own image and push it to a registry before using Terraform.
-
-## Cloud and Raspberry Pi examples
-
-Each `infra/` folder has `terraform.tfvars.example`. Copy it to a private `.tfvars` file, supply an **existing** secret and image, then run:
-
-```bash
-lumentrail infra gcp plan --var-file infra/gcp/terraform.tfvars
-lumentrail infra gcp apply --var-file infra/gcp/terraform.tfvars --approve
-```
-
-Replace `gcp` with `aws`, `azure` or `pi`. `apply` and `destroy` require `--approve`. Review a plan first. Terraform may charge for created resources. The CLI never creates cloud credentials or stores a token in Terraform state.
-
-- **GCP:** Cloud Run with internal ingress, a dedicated service account and an existing Secret Manager token. Give invoker access only to approved callers.
-- **AWS:** Fargate task in existing private subnets, ingress from one approved security group, Secrets Manager token and short CloudWatch retention. Provide NAT or the required VPC endpoints so the task can pull its image, read its secret and write logs. Connect from within the VPC.
-- **Azure:** Container App in an existing internal environment, Key Vault reference through a user assigned identity and internal ingress. Give the identity secret read access and the image pull role needed by your registry.
-- **Raspberry Pi:** Terraform uses SSH with strict host-key checking to restart a container from an existing registry image. Put the token in `/etc/lumentrail/api.env` on the Pi with restricted permissions. The port stays on loopback; use the output SSH tunnel to reach it. Use an ARM64 image.
-
-These are **private demo deployments**, not a complete production platform. For real use, add your organisation's network path, identity, monitoring, durable storage and tenant permissions, then threat-model the full path. Cloud images contain only the synthetic index. Real embeddings are not baked into the default container.
-
-## Agent context and a local Git repository
-
-Codex and Claude Code can read [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md). They describe the evidence boundary and the test command. Keep retrieved text as data, not agent instructions; never add private health notes to prompts without a clear user action.
-
-```bash
-lumentrail repo init
-git add .
-git commit -m "Initial LumenTrail lab"
-lumentrail repo publish --name lumentrail
-```
-
-Publishing uses GitHub CLI after authentication. It is separate from the site repository. Add a remote yourself if you prefer another host.
-
-## Layout
-
-```text
-src/lumentrail/   CLI, data import, retrieval, evals, memory and API
-tests/            Offline behaviour checks
-notebooks/        Short worked experiments
-infra/            GCP, AWS, Azure and Raspberry Pi examples
-data/             Generated local files, ignored where sensitive or large
-```
-
-Software is MIT licensed. Public datasets retain their own licences and attribution.
+[Blog walkthrough](https://trailblazergarage.com/how-to-evaluate-rag-without-fooling-yourself/) · [Further experiments](docs/guide.md) · [MIT licence](LICENSE)
