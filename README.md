@@ -1,12 +1,16 @@
 # LumenTrail
 
-**LumenTrail is a small Python project for building and testing document search for AI assistants.** Give it a question and a collection of text passages, such as paragraphs from a document. It returns matching passages with their sources. You can then check whether it found the information you expected.
+A customer asks when a refund will arrive. The answer is in a policy document, but the assistant finds a page about returning an item instead. Writing a more polished reply will not fix the missing information.
 
-For example, a support assistant needs to find the correct return policy before drafting a customer reply. LumenTrail lets you test that search step and compare different ways of finding the policy. Its output is source text and search results; you can add AI answer generation later.
+**LumenTrail is a small Python lab for checking whether document search finds the evidence an AI assistant needs.** Give it a question and some text passages. It returns matching passages with their sources, then lets you compare them with the passages you expected.
+
+Use it before connecting search to an AI answer writer, or when a change to your documents makes answers worse. Engineers can compare search methods; product owners can read the questions and sources to decide what counts as a useful result. The project keeps that search decision visible instead of hiding it inside a finished answer.
 
 ## Run the demo
 
-This example uses five fictional health-related passages and three saved test questions. You run it in your terminal, with no web interface or AI account needed.
+The bundled example uses five fictional health-related passages and three saved test questions. They keep the source text small enough to inspect by hand; they are not a medical knowledge base. The refund-policy situation above explains the same search problem in a different setting. You can replace the passages with your own prepared text later.
+
+You run the demo in your terminal, with no web interface or AI account needed.
 
 ```bash
 git clone https://github.com/mrjhonyvidal/lumentrail.git
